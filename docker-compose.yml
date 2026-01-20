@@ -1,0 +1,7 @@
+services:
+  nginx:
+    build:  infrastructure/nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/certs:/etc/nginx/certs:ro
