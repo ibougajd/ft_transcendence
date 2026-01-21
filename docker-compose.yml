@@ -1,7 +1,59 @@
 services:
   nginx:
-    build:  infrastructure/nginx
+    build: infrastructure/nginx
     ports:
       - "443:443"
     volumes:
       - ./infrastructure/nginx/certs:/etc/nginx/certs:ro
+    # healthcheck:
+    #   test: [ "CMD", "curl", "-f", "https://localhost:80" ]
+      # interval: 10s
+      # timeout: 5s
+      # retries: 5
+      # start_period: 30s
+    env_file:
+      - .env
+  auth:
+    build: services/auth
+    ports:
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
+    # depends_on:
+    #   - nginx
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://ft_transcendence-auth-1:3000/api/auth" ]
+      # interval: 10s
+      # timeout: 5s
+      # retries: 5
+      # start_period: 30s
+    env_file:
+      - .env
+  chat:
+    build: services/chat
+    ports:
+      - "${CHAT_SERVICE_PORT}:${CHAT_SERVICE_PORT}"
+    # depends_on:
+    #   - nginx
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://ft_transcendence-chat-1:3001/api/chat" ]
+      # interval: 10s
+      # timeout: 5s
+      # retries: 5
+      # start_period: 30s
+    env_file:
+      - .env
+  user:
+    build: services/user_management
+    ports:
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
+    # depends_on:
+    #   - nginx
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://ft_transcendence-user-1:3002/api/user" ]
+      # interval: 10s
+      # timeout: 5s
+      # retries: 5
+      # start_period: 30s
+    env_file:
+      - .env
+
+
