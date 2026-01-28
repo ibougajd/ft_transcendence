@@ -17,5 +17,5 @@ RUN npm run build
 # - The TypeScript compiler and build tools
 # - The npm cache
 
-EXPOSE 3000
+EXPOSE 3004
 CMD ["node", "dist/main.js"]

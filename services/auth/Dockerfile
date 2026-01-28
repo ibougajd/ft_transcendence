@@ -25,5 +25,5 @@ COPY --from=builder /app/package.json ./package.json
 # - source code (.ts files)
 # - compilers or build tools
 
-EXPOSE 3000
+EXPOSE 3004
 CMD ["node", "dist/main.js"]

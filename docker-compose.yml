@@ -1,9 +1,9 @@
 services:
   nginx:
     container_name: nginx
-    
-    build: infrastructure/nginx
     image: nginx
+    build: infrastructure/nginx
+    restart: unless-stopped
     ports:
       - "443:443"
     volumes:
@@ -15,6 +15,8 @@ services:
       retries: 2
     env_file:
       - .env
+    networks:
+      - microservices_network
     depends_on:
       - front
 
@@ -22,6 +24,7 @@ services:
     container_name: front
     build: frontend
     image: front
+    restart: unless-stopped
     ports:
       - "${FRONT_SERVICE_PORT}:${FRONT_SERVICE_PORT}"
     healthcheck:
@@ -31,25 +34,31 @@ services:
       retries: 2
     env_file:
       - .env
-    
+    networks:
+      - microservices_network
+
   auth:
     container_name: auth
     build: services/auth
+    restart: unless-stopped
     image: auth
     ports:
       - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://auth:3000/api/auth" ]
+      test: [ "CMD", "curl", "-f", "http://auth:3004/api/auth" ]
       interval: 2s
       timeout: 5s
       retries: 2
       # start_period: 30s
     env_file:
       - .env
+    networks:
+      - microservices_network
   chat:
     container_name: chat
     build: services/chat
     image: chat
+    restart: unless-stopped
     ports:
       - "${CHAT_SERVICE_PORT}:${CHAT_SERVICE_PORT}"
     healthcheck:
@@ -59,10 +68,13 @@ services:
       retries: 2
     env_file:
       - .env
+    networks:
+      - microservices_network
   user:
     container_name: user
     build: services/user_management
     image: user
+    restart: unless-stopped
     ports:
       - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
     healthcheck:
@@ -72,3 +84,138 @@ services:
       retries: 2
     env_file:
       - .env
+    networks:
+      - microservices_network
+
+  postgres:
+    image: postgres
+    container_name: postgres_db
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ./infrastructure/postgres/init/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      # - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${DB_USER}" ]
+      interval: 2s
+      timeout: 5s
+      retries: 2
+      # start_period: 30s
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    depends_on:
+      - nginx
+      - auth
+      - chat
+      - user
+      - front
+    networks:
+      - microservices_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./infrastructure/logging/elasticsearch:/usr/share/elasticsearch/data/
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elk
+
+  logstash:
+    image: logstash:${ELASTIC_VERSION}
+    container_name: logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./infrastructure/logging/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./infrastructure/logging/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./infrastructure/logging/logstash:/usr/share/logstash/data
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:${ELASTIC_VERSION}
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./infrastructure/logging/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./infrastructure/logging/kibana:/usr/share/kibana/data
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: elastic/filebeat:${ELASTIC_VERSION}
+    container_name: filebeat
+    user: root
+    command: [ "filebeat", "-e", "--strict.perms=false" ]
+    volumes:
+      - ./infrastructure/logging/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+      - kibana
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/logging/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/logging/prometheus:/etc/prometheus
+    restart: unless-stopped
+    networks:
+      - logging
+    depends_on:
+      - node-exporter
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks:
+      - logging
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - logging
+    depends_on:
+      - prometheus
+
+networks:
+  elk:
+    driver: bridge
+  microservices_network:
+    driver: bridge
+  logging:
+    driver: bridge
