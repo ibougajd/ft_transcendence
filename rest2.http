@@ -1,7 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:3004/api/auth
 @userUrl = http://localhost:3002/api/users
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjQsImVtYWlsIjoidGVzdHVzZXJAZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6InRlc3R1c2VyIiwiaWF0IjoxNzcyMTYzMDgwLCJleHAiOjE3NzI3Njc4ODB9.kJkzKwQE2UPutd23ugNKCxz_47BEOcTyzFY1Cge12ag
+@token = your_token_will_go_here
 
 ### ============================================
 ### AUTH SERVICE TESTS
@@ -26,6 +26,54 @@ Content-Type: application/json
   "lastName": "User"
 }
 
+### 3. Signup - Duplicate Email (Should Fail)
+POST {{baseUrl}}/signup
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "username": "anotheruser",
+  "password": "Test1234"
+}
+
+### 4. Signup - Duplicate Username (Should Fail)
+POST {{baseUrl}}/signup
+Content-Type: application/json
+
+{
+  "email": "another@example.com",
+  "username": "testuser",
+  "password": "Test1234"
+}
+
+### 5. Signup - Weak Password (Should Fail)
+POST {{baseUrl}}/signup
+Content-Type: application/json
+
+{
+  "email": "weak@example.com",
+  "username": "weakpass",
+  "password": "weak"
+}
+
+### 6. Signup - Invalid Email (Should Fail)
+POST {{baseUrl}}/signup
+Content-Type: application/json
+
+{
+  "email": "notanemail",
+  "username": "testuser2",
+  "password": "Test1234"
+}
+
+### 7. Signup - Missing Fields (Should Fail)
+POST {{baseUrl}}/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
 ### ============================================
 ### LOGIN TESTS
 ### ============================================
@@ -39,6 +87,31 @@ Content-Type: application/json
   "password": "Test1234"
 }
 
+### 9. Login - Wrong Password (Should Fail)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "WrongPassword"
+}
+
+### 10. Login - Non-existent User (Should Fail)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "Test1234"
+}
+
+### 11. Login - Missing Password (Should Fail)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com"
+}
 
 ### ============================================
 ### PROTECTED ROUTES - JWT TEST
