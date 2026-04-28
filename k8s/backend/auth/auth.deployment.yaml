@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  labels:
+    app: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: ibougajd/auth:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3004
+        envFrom:
+        - configMapRef:
+            name: transcendence-config
+        - secretRef:
+            name: transcendence-secrets
