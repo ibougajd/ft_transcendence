@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  # This uses the exact name your values.yaml defined earlier
+  name: {{ .Values.nginx.tlsSecretName | default "nginx-certs" }}
+  namespace: {{ .Release.Namespace }}
+# This is the magic type that forces Kubernetes to treat them as SSL certs
+type: kubernetes.io/tls
+data:
+  # Helm will automatically pull your base64 strings from the SOPS file
+  tls.crt: {{ .Values.secrets.TLS_CRT | quote }}
+  tls.key: {{ .Values.secrets.TLS_KEY | quote }}

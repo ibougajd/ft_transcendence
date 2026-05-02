@@ -30,7 +30,7 @@ nginx:
   enabled: true
   replicaCount: 1
   image:
-    repository: localhost:5555/nginx
+    repository: k3d-transcendence-registry:5000/nginx
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -42,7 +42,7 @@ frontend:
   enabled: true
   replicaCount: 1
   image:
-    repository: localhost:5555/front
+    repository: k3d-transcendence-registry:5000/front
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -54,7 +54,7 @@ backend:
     enabled: true
     replicaCount: 1
     image:
-      repository: localhost:5555/postgres
+      repository: k3d-transcendence-registry:5000/postgres
       tag: latest
       pullPolicy: IfNotPresent
     service:
@@ -64,7 +64,7 @@ backend:
     enabled: true
     replicaCount: 1
     image:
-      repository: localhost:5555/auth
+      repository: k3d-transcendence-registry:5000/auth
       tag: latest
       pullPolicy: IfNotPresent
     service:
@@ -74,7 +74,7 @@ backend:
     enabled: true
     replicaCount: 1
     image:
-      repository: localhost:5555/chat
+      repository: k3d-transcendence-registry:5000/chat
       tag: latest
       pullPolicy: IfNotPresent
     service:
@@ -84,7 +84,7 @@ backend:
     enabled: true
     replicaCount: 1
     image:
-      repository: localhost:5555/user
+      repository: k3d-transcendence-registry:5000/user
       tag: latest
       pullPolicy: IfNotPresent
     service:
@@ -94,7 +94,7 @@ backend:
     enabled: true
     replicaCount: 1
     image:
-      repository: localhost:5555/listings
+      repository: k3d-transcendence-registry:5000/listings
       tag: latest
       pullPolicy: IfNotPresent
     service:
@@ -104,7 +104,7 @@ backend:
     enabled: true
     replicaCount: 1
     image:
-      repository: localhost:5555/ai
+      repository: k3d-transcendence-registry:5000/ai
       tag: latest
       pullPolicy: IfNotPresent
     service:
