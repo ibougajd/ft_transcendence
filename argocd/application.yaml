@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+  namespace: argocd # Where ArgoCD is installed
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ibougajd/ft_transcendence'
+    targetRevision: HEAD
+    path: my-app-chart          # Path to your Helm chart
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default           # Where you want your APP to be deployed
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
